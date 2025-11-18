@@ -1,0 +1,478 @@
+:root {
+  --bg: #fcfcfc;
+  --text: #292929;
+  --border: #ccc;
+  --chat-me: #30e852;
+  --chat-ai: #edf1ee;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #292929;
+    --text: #fcfcfc;
+    --border: #555;
+    --chat-me: #4caf50;
+    --chat-ai: #383437;
+  }
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text);
+  font-family: sans-serif;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex.center {
+  flex-direction: row;
+  align-items: stretch;
+  height: 100%;
+}
+
+#chat-clone {
+  display: none;
+}
+
+/* --- サイドメニュー --- */
+#side-menu {
+  flex: 0 0 0; /* 初期は閉じて幅ゼロ */
+  border-right: 1px solid var(--border);
+  position: relative;
+  left: -220px; /* 少しだけ見える */
+  box-shadow: 3px 0 8px rgba(0,0,0,0.1);
+  transition: left 0.3s ease, flex 0.3s ease;
+  background: var(--bg);
+  z-index: 1000;
+}
+
+#side-menu.open {
+  left: 0;
+  flex: 2; /* 左20% */
+}
+
+/* --- チャット画面 --- */
+#chat-screen {
+  flex: 1; /* 初期全幅 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  transition: flex 0.3s ease;
+  color: var(--text);
+}
+
+#side-menu.open ~ #chat-screen {
+  flex: 8;
+}
+
+#title-text {
+  margin-top: 20%;
+  margin-bottom: 5%;
+  transition: opacity 0.3s ease;
+  text-align: center;
+}
+
+.fade-out { opacity: 0; }
+.fade-in { opacity: 1; }
+
+/* --- 質問バー（二段構造） --- */
+#question-bar {
+  display: flex;
+  flex-direction: column;
+  width: 650px;
+  min-height: 125px;
+  border: 2px solid var(--text);
+  border-radius: 25px;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  background: var(--bg);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  backdrop-filter: blur(6px);
+}
+
+/* 上段：テキスト入力 */
+#prompt {
+  width: 100%;
+  font-size: 1.1em;
+  resize: none;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  color: var(--text);
+  margin-bottom: 10px;
+  padding: 0.5rem;
+}
+
+/* 下段：ボタン行 */
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn {
+  user-select: none;
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--text);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  background: var(--text);
+  border: 2px solid var(--bg);
+  color: var(--bg);
+  transform: scale(1.05);
+}
+
+/* --- ハンバーガーメニュー --- */
+#menu-toggle {
+  display: block;
+  position: absolute;
+  top: 1rem;
+  left: 0.15rem;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+#menu-toggle:focus { outline: none; }
+#menu-toggle:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 4px;
+}
+
+#menu-toggle line {
+  transition: transform 0.3s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+#menu-toggle rect,
+#menu-toggle line { stroke: var(--text); }
+
+#menu-toggle.open #menu-toggle-1 { transform: translateY(20px); }
+#menu-toggle.open #menu-toggle-2 { transform: translateY(-20px); }
+
+#upload-files {
+  width: 80%;
+  height: 80%;
+  background-color: var(--bg);
+  border: 2px solid var(--border);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1100;
+  display: none;
+  overflow: hidden; /* 全体はスクロールさせない */
+}
+
+#upload-files.open {
+  display: block;
+}
+
+#files-close {
+  position: absolute;
+  right: 1%;
+  top: 1%;
+  z-index: 12000;
+}
+
+#main-chat {
+  display: none;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 0;
+  transform: translateY(-20px);
+  overflow-x: hidden;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  max-height: 100%;   /* モーダルの高さに収める */
+  overflow-y: auto;   /* 縦スクロール */
+}
+
+.file-list li {
+  position: relative;
+  background: var(--bg, #f5f5f5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  text-align: center;
+  aspect-ratio: 1/1;
+  transition: transform 0.5s ease;
+}
+
+.file-list li:hover {
+  transform: scale(1.05);
+  z-index: 12001;
+}
+
+.file-list img {
+  display: block;
+  margin: 0 auto 4px;
+}
+
+.file-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* --- チャット中の表示（アニメーション付き） --- */
+
+/* 初期：タイトルの下で隠れている */
+#question-bar {
+  position: absolute;
+  top: calc(50% + 60px);
+  left: 50%;
+  transform: translate(-50%, -50px);
+  opacity: 1;
+  transition: opacity 0.6s ease, transform 0.6s ease, top 0.6s ease, left 0.3s ease;
+}
+
+/* 開始後：下へスライドして定位置へ */
+#chat-screen.started #question-bar {
+  opacity: 1;
+  top: auto;
+  bottom: 2%;
+  transform: translate(-50%, 0);
+}
+
+/* サイドメニュー開閉による補正 */
+#side-menu.open ~ #chat-screen #question-bar {
+  left: calc(50% + 10%);
+}
+
+/* サイドメニュー閉じたときに戻す */
+#side-menu:not(.open) ~ #chat-screen #question-bar {
+  left: 50%;
+}
+
+#chat-screen.started #title-text {
+  display: none;
+}
+
+/* チャット開始後にふわっと表示 */
+#chat-screen.started #main-chat {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  padding: 20px 10px;
+  margin: 15px auto;
+  text-align: right;
+  font-size: 14px;
+}
+
+.chat-me {
+  margin: 10px 0;
+}
+
+.chat-me .text {
+  display: inline-block;
+  position: relative;
+  margin: 0 10px 0 0;
+  padding: 8px;
+  max-width: 250px;
+  border-radius: 12px;
+  background: var(--chat-me);
+  font-size: 15px;
+}
+
+.chat-me .text::after {
+  content: "";
+  position: absolute;
+  top: 3px; 
+  right: -19px;
+  border: 8px solid transparent;
+  border-left: 18px solid var(--chat-me);
+  -webkit-transform: rotate(-35deg);
+  transform: rotate(-35deg);
+}
+
+.chat-ai {
+  width: 100%;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.chat-ai .ai-icon {
+  float: left;
+  margin-right: -50px;
+  width: 40px;
+}
+
+.chat-ai .ai-icon img{
+  width: 100%;
+  height: auto;
+  border-radius: 50%;
+}
+
+.chat-ai .ai-text {
+  width: 100%;
+  text-align: left;
+}
+.ai-says {
+  display: inline-block;
+  position: relative; 
+  margin: 0 0 0 50px;
+  padding: 10px;
+  max-width: 50%;
+  border-radius: 12px;
+  background: var(--chat-ai);
+}
+
+.ai-says:after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 3px; 
+  left: -19px;
+  border: 8px solid transparent;
+  border-right: 18px solid var(--chat-ai);
+  -webkit-transform: rotate(35deg);
+  transform: rotate(35deg);
+}
+.ai-says .text {
+  margin: 0;
+  padding: 0;
+  white-space: pre-wrap;
+}
+
+#main-chat > :last-child {
+  margin-bottom: 20%;
+}
+
+.text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
+}
+.text * {
+  padding: 0;
+  margin: 0;
+}
+.text table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 12px 0;
+  table-layout: auto;
+  background: #fff;
+}
+.text th {
+  background: #f6f8fa;
+  color: #24292f;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #d0d7de;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.text td {
+  color: #24292f;
+  padding: 10px 12px;
+  border: 1px solid #d0d7de;
+  vertical-align: top;
+  background: #ffffff;
+}
+.text tbody tr:nth-child(odd) td {
+  background: #fbfbfc;
+}
+.text tbody tr:hover td {
+  background: #eef2f6;
+}
+.text table,
+.text th,
+.text td {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.text th[align="center"],
+.text td[align="center"] {
+  text-align: center;
+}
+.text th[align="right"],
+.text td[align="right"] {
+  text-align: right;
+}
+.text td.num,
+.text th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.text .table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.text .table-wrapper > table {
+  min-width: 520px;
+}
+.text td,
+.text th {
+  word-wrap: break-word;
+  word-break: break-word;
+}
+.text table caption {
+  caption-side: bottom;
+  padding: 6px 0 0;
+  color: #57606a;
+  font-size: 0.9rem;
+
+/* --- スマホ用 --- */
+@media (max-width: 768px) {
+  #side-menu {
+    position: absolute;
+    width: 85%;
+    max-width: 300px;
+    top: 0;
+    bottom: 0;
+    box-shadow: 3px 0 8px rgba(0,0,0,0.2);
+    left: -100%; /* 完全に隠す */
+  }
+  #side-menu.open { left: 0; }
+
+  #chat-screen { flex: 1; }
+
+  #menu-toggle { position: fixed; top: 1rem; left: 0.2rem; }
+  #question-bar { width: 95%; left: 50% !important; }
+}
