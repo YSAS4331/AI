@@ -105,7 +105,7 @@ function renderFileList() {
   const fragment = document.createDocumentFragment();
 
   for (const file of files) {
-    const key = ${file.name}-${file.size}-${file.lastModified};
+    const key = `${file.name}-${file.size}-${file.lastModified}`;
     if (existingKeys.has(key)) continue;
 
     const li = create('li');
@@ -127,7 +127,7 @@ function renderFileList() {
       img.alt = file.name;
       link.appendChild(img);
     } else {
-      link.textContent = 📄 ${file.name};
+      link.textContent = `📄 ${file.name}`;
     }
 
     const closeBtn = create('button');
@@ -207,7 +207,7 @@ async function sendMessage(msg) {
 
   const CloneChatME = ChatME.cloneNode(true);
   const meTextElement = CloneChatME.querySelector('.text');
-  meTextElement.id = chat-${ChatIndex};
+  meTextElement.id = `chat-${ChatIndex}`;
   ChatIndex++;
   meTextElement.innerHTML = renderMarkdown(message);
 
@@ -218,7 +218,7 @@ async function sendMessage(msg) {
   const CloneChatAI = ChatAI.cloneNode(true);
   const aiTextElement = CloneChatAI.querySelector('.text');
   mainScreen.appendChild(CloneChatAI);
-  aiTextElement.id = chat-${ChatIndex};
+  aiTextElement.id = `chat-${ChatIndex}`;
   ChatIndex++;
   
   let response = "AIからの返答がありませんでした";
@@ -232,10 +232,10 @@ async function sendMessage(msg) {
         response = await API[command](args);
         if (response.trim() === "") response = "コマンドの応答がありませんでした";
       } catch (err) {
-        response = コマンド実行エラー: ${err.message || err};
+        response = `コマンド実行エラー: ${err.message || err}`;
       }
     } else {
-      response = 不明なコマンドです: ${command};
+      response = `不明なコマンドです: ${command}`;
     }
   } else {
     response = await API.send(message);
